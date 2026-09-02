@@ -1,21 +1,26 @@
+export const initialMetrics = {
+  totalCustomers: 142,
+  totalDeposits: 1245000,
+  totalRD: 48,
+  totalFD: 22,
+  activeLoans: 38,
+  totalWithdrawals: 185000,
+  todayCollection: 14200,
+  pendingCollection: 3500,
+};
+
 export const initialCustomers = [
-  { id: 1, name: 'Ramesh Sharma', accountNo: 'ACC-1001', mobile: '9876543210', agent: 'Rahul Agent', status: 'Active' },
-  { id: 2, name: 'Suresh Verma', accountNo: 'ACC-1002', mobile: '9876543211', agent: 'Amit Collection', status: 'Active' },
-  { id: 3, name: 'Priya Singh', accountNo: 'ACC-1003', mobile: '9876543212', agent: 'Rahul Agent', status: 'Active' },
+  { id: 'CUST-101', name: 'Ramesh Sharma', phone: '9876543210', type: 'Daily Deposit', agent: 'Rahul Sharma', status: 'Active', balance: 25000 },
+  { id: 'CUST-102', name: 'Suresh Verma', phone: '9812345678', type: 'RD Account', agent: 'Amit Kumar', status: 'Active', balance: 12000 },
+  { id: 'CUST-103', name: 'Aniket Patel', phone: '9711223344', type: 'Loan Account', agent: 'Rahul Sharma', status: 'Active', balance: 50000 },
+];
+
+export const initialAgents = [
+  { id: 'AGT-01', name: 'Rahul Sharma', phone: '9988776655', assignedCustomers: 45, todayCollected: 8500, status: 'Active' },
+  { id: 'AGT-02', name: 'Amit Kumar', phone: '9877665544', assignedCustomers: 38, todayCollected: 5700, status: 'Active' },
 ];
 
 export const initialTransactions = [
-  { id: 'TXN-9901', customer: 'Ramesh Sharma', agent: 'Rahul Agent', type: 'RD Collection', amount: 1000, date: '2026-08-25 10:30 AM', status: 'Synced' },
-  { id: 'TXN-9902', customer: 'Suresh Verma', agent: 'Amit Collection', type: 'Loan EMI', amount: 2500, date: '2026-08-25 11:15 AM', status: 'Synced' },
-  { id: 'TXN-9903', customer: 'Priya Singh', agent: 'Rahul Agent', type: 'Deposit', amount: 5000, date: '2026-08-25 12:00 PM', status: 'Pending Audit' },
+  { id: 'TXN-901', date: '2026-09-02', customer: 'Ramesh Sharma', agent: 'Rahul Sharma', type: 'Deposit', amount: 500, status: 'Completed' },
+  { id: 'TXN-902', date: '2026-09-02', customer: 'Suresh Verma', agent: 'Amit Kumar', type: 'RD Installment', amount: 1000, status: 'Completed' },
 ];
-
-export const initialDashboardStats = {
-  totalCustomers: 142,
-  totalDeposits: 1245000,
-  activeRDCount: 86,
-  activeFDCount: 34,
-  activeLoansAmount: 830000,
-  todayCollection: 45200,
-  pendingReconciliations: 3,
-};

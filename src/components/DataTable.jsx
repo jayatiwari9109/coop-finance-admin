@@ -1,48 +1,54 @@
 import React, { useState } from 'react';
 
-export const DataTable = ({ columns, data, searchParam }) => {
+export default function DataTable({ columns, data, searchKey = 'name' }) {
   const [searchTerm, setSearchTerm] = useState('');
 
-  const filteredData = data.filter((item) => {
-    if (!searchParam || !item[searchParam]) return true;
-    return item[searchParam].toString().toLowerCase().includes(searchTerm.toLowerCase());
-  });
+  const filteredData = data.filter(item =>
+    String(item[searchKey] || '').toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
-    <div className="bg-white rounded-lg shadow border border-gray-200 overflow-hidden">
-      <div className="p-4 border-b border-gray-200">
+    <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-lg">
+      <div className="p-4 border-b border-slate-800 flex justify-between items-center gap-4">
         <input
           type="text"
-          placeholder="Search records..."
+          placeholder={`Search by ${searchKey}...`}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full md:w-64 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="bg-slate-950 text-slate-200 border border-slate-700 px-3 py-1.5 rounded-lg text-sm w-full max-w-xs focus:outline-none focus:border-blue-500"
         />
+        <span className="text-xs text-slate-400">Total: {filteredData.length} entries</span>
       </div>
       <div className="overflow-x-auto">
-        <table className="w-full text-left text-sm text-gray-600">
-          <thead className="bg-gray-50 text-gray-700 uppercase text-xs border-b border-gray-200">
+        <table className="w-full text-left text-sm text-slate-300">
+          <thead className="bg-slate-950 text-slate-400 uppercase text-xs border-b border-slate-800">
             <tr>
-              {columns.map((col, index) => (
-                <th key={index} className="px-6 py-3">{col.header}</th>
+              {columns.map((col, idx) => (
+                <th key={idx} className="p-3">{col.header}</th>
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200">
-            {filteredData.map((row, rowIndex) => (
-              <tr key={rowIndex} className="hover:bg-gray-50">
-                {columns.map((col, colIndex) => (
-                  <td key={colIndex} className="px-6 py-4">
-                    {col.cell ? col.cell(row) : row[col.accessor]}
-                  </td>
-                ))}
+          <tbody className="divide-y divide-slate-800">
+            {filteredData.length > 0 ? (
+              filteredData.map((row, idx) => (
+                <tr key={idx} className="hover:bg-slate-800/50 transition-colors">
+                  {columns.map((col, cIdx) => (
+                    <td key={cIdx} className="p-3">
+                      {col.render ? col.render(row) : row[col.accessor]}
+                    </td>
+                  ))}
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={columns.length} className="text-center p-6 text-slate-500">
+                  No records found
+                </td>
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
       </div>
     </div>
   );
-};
-
-export default DataTable;
+}

@@ -1,38 +1,42 @@
-import { initialCustomers, initialTransactions, initialDashboardStats } from './mockData';
+import axios from 'axios';
 
-// Simulated Server Delay (800ms)
-const delay = (ms = 800) => new Promise((resolve) => setTimeout(resolve, ms));
+const API_BASE_URL = 'https://api.coopfinance.com/v1'; // Client server endpoint
 
-export const apiService = {
-  // Fetch Dashboard Stats
-  getDashboardStats: async () => {
-    await delay(500);
-    return { success: true, data: initialDashboardStats };
+const apiClient = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
   },
+});
 
-  // Customer Management APIs
-  getCustomers: async () => {
-    await delay();
-    return { success: true, data: [...initialCustomers] };
-  },
+// Request Interceptor: Auth token inject karne ke liye
+apiClient.interceptors.request.use((config) => {
+  const token = localStorage.getItem('coop_token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+}, (error) => Promise.reject(error));
 
-  addCustomer: async (newCustomer) => {
-    await delay();
-    const created = { id: Date.now(), ...newCustomer, status: 'Active' };
-    initialCustomers.push(created);
-    return { success: true, data: created };
-  },
-
-  deleteCustomer: async (id) => {
-    await delay();
-    const index = initialCustomers.findIndex((c) => c.id === id);
-    if (index !== -1) initialCustomers.splice(index, 1);
-    return { success: true, id };
-  },
-
-  // Transaction Log APIs
-  getTransactions: async () => {
-    await delay();
-    return { success: true, data: [...initialTransactions] };
-  },
+// Auth & Core Endpoints
+export const authAPI = {
+  login: (credentials) => apiClient.post('/auth/login', credentials),
+  logout: () => apiClient.post('/auth/logout'),
 };
+
+export const customerAPI = {
+  getAll: () => apiClient.get('/customers'),
+  create: (data) => apiClient.post('/customers', data),
+};
+
+export const agentAPI = {
+  getAll: () => apiClient.get('/agents'),
+  create: (data) => apiClient.post('/agents', data),
+};
+
+export const loanAPI = {
+  getAll: () => apiClient.get('/loans'),
+  create: (data) => apiClient.post('/loans', data),
+};
+
+export default apiClient;

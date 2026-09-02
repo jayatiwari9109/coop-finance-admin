@@ -1,70 +1,142 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 export default function Dashboard() {
-  const stats = [
-    { label: "Total Customers", value: "1,248", change: "+12%", color: "text-blue-400" },
-    { label: "Total RD Deposits", value: "₹ 14,25,000", change: "+8%", color: "text-emerald-400" },
-    { label: "Total FD Deposits", value: "₹ 48,50,000", change: "+15%", color: "text-indigo-400" },
-    { label: "Active Loans Out", value: "₹ 22,10,000", change: "-3%", color: "text-purple-400" },
+  const navigate = useNavigate();
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const topMetrics = [
+    { title: 'Total Customers', value: '12,543', progress: 75, limit: '11,156', change: '+12.5%', color: 'bg-[#0284c7]', route: '/customers' },
+    { title: 'Total Products / RD', value: '3,842', progress: 62, limit: '3,551', change: '+8.2%', color: 'bg-emerald-500', route: '/rd' },
+    { title: 'Today Collections', value: '9,238', progress: 85, limit: '8,012', change: '+15.3%', color: 'bg-amber-500', route: '/deposits' },
+    { title: 'Total Revenue', value: '₹ 2.4M', progress: 90, limit: '₹ 1.95M', change: '+23.1%', color: 'bg-purple-500', route: '/reports' },
   ];
 
-  const recentTransactions = [
-    { id: "TXN-9081", customer: "Ramesh Sharma", type: "RD Installment", amount: "₹ 1,000", status: "Success", date: "Today" },
-    { id: "TXN-9082", customer: "Suresh Verma", type: "Loan EMI", amount: "₹ 4,500", status: "Success", date: "Today" },
-    { id: "TXN-9083", customer: "Anita Gupta", type: "FD Creation", amount: "₹ 50,000", status: "Completed", date: "Yesterday" },
+  const quickActions = [
+    { label: 'Add Customer', sub: 'Create new profile', bg: 'bg-[#0284c7]', route: '/customers' },
+    { label: 'Approve Loans', sub: 'Review pending', bg: 'bg-[#10b981]', route: '/loans' },
+    { label: 'View Reports', sub: 'Analyze data', bg: 'bg-[#f97316]', route: '/reports' },
+    { label: 'Settings', sub: 'Configure system', bg: 'bg-[#a855f7]', route: '/reconciliation' },
   ];
+
+  const handleRefresh = () => {
+    setIsRefreshing(true);
+    setTimeout(() => setIsRefreshing(false), 800);
+  };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-white">Dashboard Overview</h1>
-        <p className="text-sm text-slate-400 mt-1">Cooperative Finance & Collection System Summary</p>
+    <div className="space-y-4 sm:space-y-6 max-w-7xl mx-auto">
+      
+      {/* Banner Actions */}
+      <div className="bg-[#026aa7] text-white p-4 sm:p-6 rounded-2xl shadow-md space-y-4 sm:space-y-5">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Welcome back, Admin</h1>
+            <span className="bg-white/15 backdrop-blur-sm text-sky-100 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full text-[11px] sm:text-xs font-medium border border-white/10">
+              Wednesday, September 2, 2026
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2 w-full md:w-auto justify-end">
+            <button 
+              onClick={() => alert('Exporting report...')}
+              className="px-3 py-1.5 bg-white/15 hover:bg-white/25 active:scale-95 text-white rounded-lg text-xs font-semibold transition-all border border-white/20 cursor-pointer"
+            >
+              Export
+            </button>
+            <button 
+              onClick={handleRefresh}
+              className={`px-3 py-1.5 bg-white/15 hover:bg-white/25 active:scale-95 text-white rounded-lg text-xs font-semibold transition-all border border-white/20 cursor-pointer ${
+                isRefreshing ? 'animate-pulse opacity-70' : ''
+              }`}
+            >
+              {isRefreshing ? 'Refreshing...' : 'Refresh'}
+            </button>
+          </div>
+        </div>
+
+        <p className="text-xs text-sky-100 font-normal">
+          Here's your platform performance overview
+        </p>
+
+        {/* Mini Glass Stats */}
+        <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3 pt-1">
+          <div className="bg-[#014f7c]/50 backdrop-blur-md border border-white/10 p-3 sm:p-3.5 rounded-xl hover:bg-[#014f7c]/70 transition-all cursor-pointer" onClick={() => navigate('/deposits')}>
+            <span className="text-[11px] text-sky-200 font-medium block">Today's Collections</span>
+            <span className="text-lg sm:text-xl font-extrabold block my-0.5">47</span>
+            <span className="text-[10px] text-emerald-300 font-semibold">+12% from yesterday</span>
+          </div>
+
+          <div className="bg-[#014f7c]/50 backdrop-blur-md border border-white/10 p-3 sm:p-3.5 rounded-xl hover:bg-[#014f7c]/70 transition-all cursor-pointer" onClick={() => navigate('/customers')}>
+            <span className="text-[11px] text-sky-200 font-medium block">New Customers</span>
+            <span className="text-lg sm:text-xl font-extrabold block my-0.5">23</span>
+            <span className="text-[10px] text-emerald-300 font-semibold">+8% from yesterday</span>
+          </div>
+
+          <div className="bg-[#014f7c]/50 backdrop-blur-md border border-white/10 p-3 sm:p-3.5 rounded-xl hover:bg-[#014f7c]/70 transition-all cursor-pointer" onClick={() => navigate('/reports')}>
+            <span className="text-[11px] text-sky-200 font-medium block">Revenue Today</span>
+            <span className="text-lg sm:text-xl font-extrabold block my-0.5">₹ 84K</span>
+            <span className="text-[10px] text-emerald-300 font-semibold">+16% from yesterday</span>
+          </div>
+
+          <div className="bg-[#014f7c]/50 backdrop-blur-md border border-white/10 p-3 sm:p-3.5 rounded-xl hover:bg-[#014f7c]/70 transition-all cursor-pointer" onClick={() => navigate('/reconciliation')}>
+            <span className="text-[11px] text-sky-200 font-medium block">Collection Rate</span>
+            <span className="text-lg sm:text-xl font-extrabold block my-0.5">93.2%</span>
+            <span className="text-[10px] text-emerald-300 font-semibold">+0.4% target met</span>
+          </div>
+        </div>
       </div>
 
-      {/* Analytics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.map((item, index) => (
-          <div key={index} className="bg-slate-800 border border-slate-700 rounded-xl p-4">
-            <p className="text-xs font-semibold text-slate-400 uppercase">{item.label}</p>
-            <div className="flex items-baseline justify-between mt-2">
-              <span className={`text-2xl font-bold ${item.color}`}>{item.value}</span>
-              <span className="text-xs font-medium text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded">{item.change}</span>
+      {/* Primary Metric Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        {topMetrics.map((card, idx) => (
+          <div 
+            key={idx} 
+            onClick={() => navigate(card.route)}
+            className="bg-white border border-slate-200 p-4 sm:p-5 rounded-2xl shadow-xs space-y-3 hover:shadow-md hover:border-slate-300 transition-all cursor-pointer active:scale-98"
+          >
+            <div className="flex justify-between items-center">
+              <span className="text-xs font-semibold text-slate-500">{card.title}</span>
+              <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+                {card.change}
+              </span>
+            </div>
+            
+            <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900">{card.value}</h2>
+            
+            <div className="space-y-1">
+              <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                <div className={`${card.color} h-full rounded-full`} style={{ width: `${card.progress}%` }}></div>
+              </div>
+              <div className="flex justify-between text-[10px] text-slate-400 font-medium">
+                <span>vs last month</span>
+                <span>{card.limit}</span>
+              </div>
             </div>
           </div>
         ))}
       </div>
 
-      {/* Recent Activity Table */}
-      <div className="bg-slate-800 border border-slate-700 rounded-xl p-4 space-y-4">
-        <h2 className="text-lg font-bold text-white">Recent Transactions</h2>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm text-slate-300">
-            <thead className="bg-slate-900/50 text-slate-400 border-b border-slate-700">
-              <tr>
-                <th className="p-3">Transaction ID</th>
-                <th className="p-3">Customer Name</th>
-                <th className="p-3">Type</th>
-                <th className="p-3">Amount</th>
-                <th className="p-3">Status</th>
-                <th className="p-3">Date</th>
-              </tr>
-            </thead>
-            <tbody>
-              {recentTransactions.map((txn) => (
-                <tr key={txn.id} className="border-b border-slate-700/50 hover:bg-slate-700/30">
-                  <td className="p-3 font-mono text-xs text-blue-400">{txn.id}</td>
-                  <td className="p-3 font-semibold text-white">{txn.customer}</td>
-                  <td className="p-3">{txn.type}</td>
-                  <td className="p-3 font-bold text-emerald-400">{txn.amount}</td>
-                  <td className="p-3"><span className="bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded text-xs">{txn.status}</span></td>
-                  <td className="p-3 text-slate-400">{txn.date}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      {/* Quick Action Cards */}
+      <div className="bg-white border border-slate-200 p-4 sm:p-6 rounded-2xl shadow-xs space-y-4">
+        <h3 className="text-sm font-bold text-slate-800">Quick Actions</h3>
+        
+        <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          {quickActions.map((act, i) => (
+            <div
+              key={i}
+              onClick={() => navigate(act.route)}
+              className={`${act.bg} text-white p-4 rounded-xl shadow-xs hover:opacity-90 active:scale-98 transition-all cursor-pointer flex flex-col justify-end h-20`}
+            >
+              <div>
+                <h4 className="text-xs sm:text-sm font-bold leading-tight">{act.label}</h4>
+                <p className="text-[10px] text-white/80">{act.sub}</p>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
+
     </div>
   );
 }
