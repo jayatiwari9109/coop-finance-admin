@@ -1,9 +1,17 @@
 import React, { useState } from 'react';
-import { Link, Outlet, useLocation } from 'react-router-dom';
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 export default function AdminLayout() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
 
   const menuItems = [
     { path: '/', label: 'Dashboard' },
@@ -78,15 +86,24 @@ export default function AdminLayout() {
           </nav>
         </div>
 
-        {/* Footer User Profile */}
-        <div className="border-t border-white/20 pt-3 px-2 flex items-center gap-3 text-xs">
-          <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center font-bold text-white shrink-0">
-            AU
+        {/* Footer User Profile & Logout */}
+        <div className="border-t border-white/20 pt-3 px-2 flex items-center justify-between text-xs">
+          <div className="flex items-center gap-2 overflow-hidden">
+            <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center font-bold text-white shrink-0">
+              {user?.name ? user.name.slice(0, 2).toUpperCase() : 'AD'}
+            </div>
+            <div className="leading-tight overflow-hidden">
+              <span className="font-bold text-white block truncate">{user?.name || 'Admin User'}</span>
+              <span className="text-[10px] text-sky-200 truncate block">{user?.email || 'admin@coop.com'}</span>
+            </div>
           </div>
-          <div className="leading-tight overflow-hidden">
-            <span className="font-bold text-white block truncate">Admin User</span>
-            <span className="text-[10px] text-sky-200 truncate block">admin@coopfinance.com</span>
-          </div>
+          <button 
+            onClick={handleLogout} 
+            className="text-xs bg-rose-500 hover:bg-rose-600 px-2 py-1 rounded text-white font-semibold cursor-pointer"
+            title="Logout"
+          >
+            Exit
+          </button>
         </div>
       </aside>
 
@@ -96,7 +113,6 @@ export default function AdminLayout() {
         {/* Responsive Header */}
         <header className="h-16 border-b border-slate-200 bg-white px-4 sm:px-8 flex items-center justify-between sticky top-0 z-20 shadow-xs">
           <div className="flex items-center gap-3">
-            {/* Mobile Hamburger Menu Button */}
             <button 
               onClick={() => setIsMobileMenuOpen(true)}
               className="lg:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-lg text-lg font-bold"

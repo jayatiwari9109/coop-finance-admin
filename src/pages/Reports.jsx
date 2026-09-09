@@ -7,42 +7,47 @@ export default function Reports() {
     { 
       title: 'Daily Collection Statement', 
       desc: 'Detailed log of all doorstep transactions collected today.', 
-      format: 'PDF / Excel',
-      filename: 'Daily_Collection_Statement.csv',
-      data: "Transaction_ID,Agent,Customer,Amount,Status\nTXN101,Rahul Sharma,Ramesh Kumar,1500,Success\nTXN102,Vikas Gupta,Priya Sharma,5000,Success"
+      format: 'CSV / Excel',
+      endpoint: 'http://localhost:5000/api/reports/daily-collection',
+      filename: 'Daily_Collection_Statement.csv'
     },
     { 
       title: 'Loan Recovery Ledger', 
       desc: 'EMI recovery status breakdown by agent and borrower.', 
-      format: 'Excel',
-      filename: 'Loan_Recovery_Ledger.csv',
-      data: "Loan_ID,Borrower,EMI_Due,Paid_Amount,Status\nLN5501,Amit Patel,4500,4500,Paid\nLN5502,Ramesh Kumar,12000,12000,Paid"
+      format: 'CSV / Excel',
+      endpoint: 'http://localhost:5000/api/reports/loan-recovery',
+      filename: 'Loan_Recovery_Ledger.csv'
     },
     { 
       title: 'RD & FD Growth Report', 
       desc: 'Monthly deposit accumulation and upcoming maturity timelines.', 
-      format: 'PDF',
-      filename: 'RD_FD_Growth_Report.csv',
-      data: "Account_No,Type,Customer,Principal,Maturity_Date\nRD101,RD,Suresh Verma,12000,2026-09-10\nFD301,FD,Vikram Singh,100000,2027-09-02"
+      format: 'CSV / Excel',
+      endpoint: 'http://localhost:5000/api/reports/rd-fd-growth',
+      filename: 'RD_FD_Growth_Report.csv'
     },
   ];
 
-  const handleDownload = (report, index) => {
+  const handleDownload = async (report, index) => {
     setDownloadingIdx(index);
 
-    setTimeout(() => {
-      // Trigger file download simulation
-      const blob = new Blob([report.data], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
+    try {
+      const response = await fetch(report.endpoint);
+      if (!response.ok) throw new Error('Failed to download report');
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
-      link.setAttribute('href', url);
+      link.href = url;
       link.setAttribute('download', report.filename);
       document.body.appendChild(link);
       link.click();
-      document.body.removeChild(link);
-
+      link.parentNode.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error downloading report:', error);
+    } finally {
       setDownloadingIdx(null);
-    }, 1000);
+    }
   };
 
   return (

@@ -1,30 +1,53 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Modal from '../components/Modal';
 
 export default function FD() {
-  const [fdList, setFdList] = useState([
-    { fdNo: 'FD-301', customer: 'Vikram Singh', principal: 100000, rate: '8.5%', maturityDate: '2027-09-02', status: 'Active' },
-    { fdNo: 'FD-302', customer: 'Sunita Sharma', principal: 50000, rate: '8.0%', maturityDate: '2026-12-10', status: 'Active' },
-  ]);
-
+  const [fdList, setFdList] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isCertModalOpen, setIsCertModalOpen] = useState(false);
   const [selectedFd, setSelectedFd] = useState(null);
-  const [formData, setFormData] = useState({ customer: '', principal: '', rate: '8.5%', maturityDate: '' });
+  const [formData, setFormData] = useState({ customer: '', principal: '', rate: '8.5', maturityDate: '' });
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = (e) => {
+  useEffect(() => {
+    fetchFDs();
+  }, []);
+
+  // Fetch all FDs from Backend API
+  const fetchFDs = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch('http://localhost:5000/api/fds');
+      const data = await res.json();
+      if (res.ok) setFdList(data);
+    } catch (err) {
+      console.error('Error fetching FDs:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Submit New FD to Database
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const newEntry = {
-      fdNo: `FD-${301 + fdList.length}`,
-      customer: formData.customer,
-      principal: Number(formData.principal),
-      rate: `${formData.rate}%`,
-      maturityDate: formData.maturityDate,
-      status: 'Active',
-    };
-    setFdList([...fdList, newEntry]);
-    setIsModalOpen(false);
-    setFormData({ customer: '', principal: '', rate: '8.5%', maturityDate: '' });
+    setSubmitting(true);
+    try {
+      const res = await fetch('http://localhost:5000/api/fds/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      });
+      if (res.ok) {
+        fetchFDs();
+        setIsModalOpen(false);
+        setFormData({ customer: '', principal: '', rate: '8.5', maturityDate: '' });
+      }
+    } catch (err) {
+      console.error('Error issuing FD:', err);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleOpenCertificate = (fd) => {
@@ -62,28 +85,34 @@ export default function FD() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {fdList.map((fd) => (
-                <tr key={fd.fdNo} className="hover:bg-slate-50 transition-colors">
-                  <td className="p-3 font-mono text-slate-500">{fd.fdNo}</td>
-                  <td className="p-3 font-semibold text-slate-900">{fd.customer}</td>
-                  <td className="p-3 font-bold text-emerald-600">₹ {fd.principal.toLocaleString('en-IN')}</td>
-                  <td className="p-3 font-semibold text-slate-700">{fd.rate}</td>
-                  <td className="p-3">{fd.maturityDate}</td>
-                  <td className="p-3">
-                    <span className="px-2.5 py-1 text-[10px] rounded-full font-bold bg-emerald-100 text-emerald-700">
-                      {fd.status}
-                    </span>
-                  </td>
-                  <td className="p-3 text-right">
-                    <button 
-                      onClick={() => handleOpenCertificate(fd)}
-                      className="text-[#0284c7] font-semibold hover:underline cursor-pointer"
-                    >
-                      Certificate
-                    </button>
-                  </td>
-                </tr>
-              ))}
+              {loading ? (
+                <tr><td colSpan="7" className="p-4 text-center text-slate-400">Loading FD Accounts...</td></tr>
+              ) : fdList.length === 0 ? (
+                <tr><td colSpan="7" className="p-4 text-center text-slate-400">No FD Accounts found</td></tr>
+              ) : (
+                fdList.map((fd) => (
+                  <tr key={fd._id} className="hover:bg-slate-50 transition-colors">
+                    <td className="p-3 font-mono text-slate-500">{fd.fdNo}</td>
+                    <td className="p-3 font-semibold text-slate-900">{fd.customer}</td>
+                    <td className="p-3 font-bold text-emerald-600">₹ {fd.principal?.toLocaleString('en-IN')}</td>
+                    <td className="p-3 font-semibold text-slate-700">{fd.rate}</td>
+                    <td className="p-3">{fd.maturityDate}</td>
+                    <td className="p-3">
+                      <span className="px-2.5 py-1 text-[10px] rounded-full font-bold bg-emerald-100 text-emerald-700">
+                        {fd.status}
+                      </span>
+                    </td>
+                    <td className="p-3 text-right">
+                      <button 
+                        onClick={() => handleOpenCertificate(fd)}
+                        className="text-[#0284c7] font-semibold hover:underline cursor-pointer"
+                      >
+                        Certificate
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
@@ -112,7 +141,9 @@ export default function FD() {
           </div>
           <div className="flex justify-end gap-2 pt-3">
             <button type="button" onClick={() => setIsModalOpen(false)} className="px-3.5 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl cursor-pointer">Cancel</button>
-            <button type="submit" className="px-4 py-2 text-xs bg-[#0284c7] hover:bg-[#026aa7] text-white font-semibold rounded-xl cursor-pointer">Issue FD</button>
+            <button type="submit" disabled={submitting} className="px-4 py-2 text-xs bg-[#0284c7] hover:bg-[#026aa7] text-white font-semibold rounded-xl cursor-pointer disabled:opacity-50">
+              {submitting ? 'Issuing...' : 'Issue FD'}
+            </button>
           </div>
         </form>
       </Modal>
@@ -142,7 +173,7 @@ export default function FD() {
                 </div>
                 <div>
                   <p className="text-slate-500 text-[11px]">Principal Amount</p>
-                  <p className="font-bold text-emerald-600">₹ {selectedFd.principal.toLocaleString('en-IN')}</p>
+                  <p className="font-bold text-emerald-600">₹ {selectedFd.principal?.toLocaleString('en-IN')}</p>
                 </div>
                 <div>
                   <p className="text-slate-500 text-[11px]">Maturity Date</p>

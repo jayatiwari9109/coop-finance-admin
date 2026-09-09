@@ -16,13 +16,13 @@ export default function Login() {
     setError('');
 
     try {
-      // Backend API Hit
-      const res = await fetch('http://localhost:5000/api/auth/login', {
+      // Relative Path `/api/auth/login` use kiya gaya hai (Vite Proxy compatible)
+      const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email: email.trim(), password }),
       });
 
       const data = await res.json();
@@ -31,11 +31,13 @@ export default function Login() {
         throw new Error(data.message || 'Invalid email or password credentials.');
       }
 
-      // AuthContext me real user aur token store karein
-      login(data.user, data.token);
-      navigate('/', { replace: true });
+      // Context state update
+      login({ ...data.user, token: data.token });
+      
+      // Successful login redirect
+      navigate('/customers', { replace: true });
     } catch (err) {
-      setError(err.message);
+      setError(err.message || 'Failed to connect to server');
     } finally {
       setLoading(false);
     }

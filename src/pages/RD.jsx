@@ -1,65 +1,53 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Modal from '../components/Modal';
 
 export default function RD() {
-  const [rdList, setRdList] = useState([
-    { 
-      rdNo: 'RD-101', 
-      customer: 'Suresh Verma', 
-      emi: 1000, 
-      progress: '5/12 Paid', 
-      dueDate: '2026-09-10', 
-      status: 'Active',
-      paidCount: 5,
-      totalTenure: 12,
-      transactions: [
-        { installmentNo: 1, date: '2026-04-10', amount: 1000, status: 'Paid' },
-        { installmentNo: 2, date: '2026-05-10', amount: 1000, status: 'Paid' },
-        { installmentNo: 3, date: '2026-06-10', amount: 1000, status: 'Paid' },
-        { installmentNo: 4, date: '2026-07-10', amount: 1000, status: 'Paid' },
-        { installmentNo: 5, date: '2026-08-10', amount: 1000, status: 'Paid' },
-      ]
-    },
-    { 
-      rdNo: 'RD-102', 
-      customer: 'Anita Roy', 
-      emi: 2000, 
-      progress: '12/12 Paid', 
-      dueDate: '2026-08-15', 
-      status: 'Completed',
-      paidCount: 12,
-      totalTenure: 12,
-      transactions: Array.from({ length: 12 }, (_, i) => ({
-        installmentNo: i + 1,
-        date: `2025-${String(i + 1).padStart(2, '0')}-15`,
-        amount: 2000,
-        status: 'Paid'
-      }))
-    },
-  ]);
-
+  const [rdList, setRdList] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isPassbookModalOpen, setIsPassbookModalOpen] = useState(false);
   const [selectedRd, setSelectedRd] = useState(null);
   const [formData, setFormData] = useState({ customer: '', emi: '', tenure: '12', dueDate: '' });
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = (e) => {
+  useEffect(() => {
+    fetchRDs();
+  }, []);
+
+  // Fetch all RDs from Backend API
+  const fetchRDs = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch('http://localhost:5000/api/rds');
+      const data = await res.json();
+      if (res.ok) setRdList(data);
+    } catch (err) {
+      console.error('Error fetching RDs:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Submit New RD to Database
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const tenure = Number(formData.tenure);
-    const newEntry = {
-      rdNo: `RD-${101 + rdList.length}`,
-      customer: formData.customer,
-      emi: Number(formData.emi),
-      progress: `0/${tenure} Paid`,
-      paidCount: 0,
-      totalTenure: tenure,
-      dueDate: formData.dueDate,
-      status: 'Active',
-      transactions: []
-    };
-    setRdList([...rdList, newEntry]);
-    setIsModalOpen(false);
-    setFormData({ customer: '', emi: '', tenure: '12', dueDate: '' });
+    setSubmitting(true);
+    try {
+      const res = await fetch('http://localhost:5000/api/rds/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      });
+      if (res.ok) {
+        fetchRDs();
+        setIsModalOpen(false);
+        setFormData({ customer: '', emi: '', tenure: '12', dueDate: '' });
+      }
+    } catch (err) {
+      console.error('Error creating RD:', err);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleOpenPassbook = (rd) => {
@@ -67,29 +55,20 @@ export default function RD() {
     setIsPassbookModalOpen(true);
   };
 
-  const handlePayInstallment = (rdNo) => {
-    setRdList(rdList.map(rd => {
-      if (rd.rdNo === rdNo && rd.paidCount < rd.totalTenure) {
-        const newPaidCount = rd.paidCount + 1;
-        const updatedStatus = newPaidCount === rd.totalTenure ? 'Completed' : 'Active';
-        const newTxn = {
-          installmentNo: newPaidCount,
-          date: new Date().toISOString().split('T')[0],
-          amount: rd.emi,
-          status: 'Paid'
-        };
-        const updatedRd = {
-          ...rd,
-          paidCount: newPaidCount,
-          progress: `${newPaidCount}/${rd.totalTenure} Paid`,
-          status: updatedStatus,
-          transactions: [...rd.transactions, newTxn]
-        };
+  // Record Installment Payment via API
+  const handlePayInstallment = async (rdId) => {
+    try {
+      const res = await fetch(`http://localhost:5000/api/rds/pay-installment/${rdId}`, {
+        method: 'POST'
+      });
+      const updatedRd = await res.json();
+      if (res.ok) {
         setSelectedRd(updatedRd);
-        return updatedRd;
+        fetchRDs();
       }
-      return rd;
-    }));
+    } catch (err) {
+      console.error('Error paying installment:', err);
+    }
   };
 
   return (
@@ -122,30 +101,36 @@ export default function RD() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {rdList.map((rd) => (
-                <tr key={rd.rdNo} className="hover:bg-slate-50 transition-colors">
-                  <td className="p-3 font-mono text-slate-500">{rd.rdNo}</td>
-                  <td className="p-3 font-semibold text-slate-900">{rd.customer}</td>
-                  <td className="p-3 font-bold text-emerald-600">₹ {rd.emi.toLocaleString('en-IN')}</td>
-                  <td className="p-3">{rd.progress}</td>
-                  <td className="p-3">{rd.dueDate}</td>
-                  <td className="p-3">
-                    <span className={`px-2.5 py-1 text-[10px] rounded-full font-bold ${
-                      rd.status === 'Active' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'
-                    }`}>
-                      {rd.status}
-                    </span>
-                  </td>
-                  <td className="p-3 text-right">
-                    <button 
-                      onClick={() => handleOpenPassbook(rd)}
-                      className="text-[#0284c7] font-semibold hover:underline cursor-pointer"
-                    >
-                      Passbook
-                    </button>
-                  </td>
-                </tr>
-              ))}
+              {loading ? (
+                <tr><td colSpan="7" className="p-4 text-center text-slate-400">Loading RD Accounts...</td></tr>
+              ) : rdList.length === 0 ? (
+                <tr><td colSpan="7" className="p-4 text-center text-slate-400">No RD Accounts found</td></tr>
+              ) : (
+                rdList.map((rd) => (
+                  <tr key={rd._id} className="hover:bg-slate-50 transition-colors">
+                    <td className="p-3 font-mono text-slate-500">{rd.rdNo}</td>
+                    <td className="p-3 font-semibold text-slate-900">{rd.customer}</td>
+                    <td className="p-3 font-bold text-emerald-600">₹ {rd.emi?.toLocaleString('en-IN')}</td>
+                    <td className="p-3">{`${rd.paidCount}/${rd.totalTenure} Paid`}</td>
+                    <td className="p-3">{rd.dueDate}</td>
+                    <td className="p-3">
+                      <span className={`px-2.5 py-1 text-[10px] rounded-full font-bold ${
+                        rd.status === 'Active' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'
+                      }`}>
+                        {rd.status}
+                      </span>
+                    </td>
+                    <td className="p-3 text-right">
+                      <button 
+                        onClick={() => handleOpenPassbook(rd)}
+                        className="text-[#0284c7] font-semibold hover:underline cursor-pointer"
+                      >
+                        Passbook
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
@@ -174,7 +159,9 @@ export default function RD() {
           </div>
           <div className="flex justify-end gap-2 pt-3">
             <button type="button" onClick={() => setIsModalOpen(false)} className="px-3.5 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl cursor-pointer">Cancel</button>
-            <button type="submit" className="px-4 py-2 text-xs bg-[#0284c7] hover:bg-[#026aa7] text-white font-semibold rounded-xl cursor-pointer">Create Account</button>
+            <button type="submit" disabled={submitting} className="px-4 py-2 text-xs bg-[#0284c7] hover:bg-[#026aa7] text-white font-semibold rounded-xl cursor-pointer disabled:opacity-50">
+              {submitting ? 'Creating...' : 'Create Account'}
+            </button>
           </div>
         </form>
       </Modal>
@@ -186,10 +173,10 @@ export default function RD() {
             <div className="flex justify-between items-center text-xs bg-slate-50 p-3 rounded-xl border border-slate-200">
               <div>
                 <p className="text-slate-500">Holder: <strong className="text-slate-900">{selectedRd.customer}</strong></p>
-                <p className="text-slate-500">Monthly Deposit: <strong className="text-emerald-600">₹ {selectedRd.emi.toLocaleString('en-IN')}</strong></p>
+                <p className="text-slate-500">Monthly Deposit: <strong className="text-emerald-600">₹ {selectedRd.emi?.toLocaleString('en-IN')}</strong></p>
               </div>
               <div className="text-right">
-                <p className="text-slate-500">Progress: <strong className="text-slate-900">{selectedRd.progress}</strong></p>
+                <p className="text-slate-500">Progress: <strong className="text-slate-900">{`${selectedRd.paidCount}/${selectedRd.totalTenure} Paid`}</strong></p>
                 <span className={`text-[10px] font-bold ${selectedRd.status === 'Active' ? 'text-emerald-600' : 'text-slate-500'}`}>
                   {selectedRd.status}
                 </span>
@@ -207,12 +194,12 @@ export default function RD() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {selectedRd.transactions.length > 0 ? (
+                  {selectedRd.transactions && selectedRd.transactions.length > 0 ? (
                     selectedRd.transactions.map((tx) => (
                       <tr key={tx.installmentNo}>
                         <td className="p-2.5 font-mono">#{tx.installmentNo}</td>
-                        <td className="p-2.5">{tx.date}</td>
-                        <td className="p-2.5 font-bold text-slate-900">₹ {tx.amount.toLocaleString('en-IN')}</td>
+                        <td className="p-2.5">{new Date(tx.date).toLocaleDateString()}</td>
+                        <td className="p-2.5 font-bold text-slate-900">₹ {tx.amount?.toLocaleString('en-IN')}</td>
                         <td className="p-2.5 text-right font-semibold text-emerald-600">{tx.status}</td>
                       </tr>
                     ))
@@ -228,7 +215,7 @@ export default function RD() {
             <div className="flex justify-between items-center pt-2">
               {selectedRd.status === 'Active' ? (
                 <button 
-                  onClick={() => handlePayInstallment(selectedRd.rdNo)}
+                  onClick={() => handlePayInstallment(selectedRd._id)}
                   className="px-3.5 py-2 text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl cursor-pointer"
                 >
                   + Record Installment Payment

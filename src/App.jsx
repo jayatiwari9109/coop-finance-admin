@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -20,29 +20,27 @@ import Unauthorized from './pages/Unauthorized';
 export default function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
-        <Routes>
-          {/* Public Unprotected Route */}
-          <Route path="/login" element={<Login />} />
+      <Routes>
+        {/* Public Unprotected Route */}
+        <Route path="/login" element={<Login />} />
 
-          {/* Protected Routes Block */}
-          <Route element={<ProtectedRoute />}>
-            <Route path="/" element={<AdminLayout />}>
-              <Route index element={<Dashboard />} />
-              <Route path="customers" element={<Customers />} />
-              <Route path="deposits" element={<Deposits />} />
-              <Route path="rd" element={<RD />} />
-              <Route path="fd" element={<FD />} />
-              <Route path="loans" element={<Loans />} />
-              <Route path="withdrawals" element={<Withdrawals />} />
-              <Route path="agents" element={<Agents />} />
-              <Route path="reconciliation" element={<Reconciliation />} />
-              <Route path="reports" element={<Reports />} />
-              <Route path="unauthorized" element={<Unauthorized />} />
-            </Route>
+        {/* Protected Routes Block */}
+        <Route element={<ProtectedRoute />}>
+          <Route path="/" element={<AdminLayout />}>
+            <Route index element={<Dashboard />} />
+            <Route path="customers" element={<Customers />} />
+            <Route path="deposits" element={<Deposits />} />
+            <Route path="rd" element={<RD />} />
+            <Route path="fd" element={<FD />} />
+            <Route path="loans" element={<Loans />} />
+            <Route path="withdrawals" element={<Withdrawals />} />
+            <Route path="agents" element={<Agents />} />
+            <Route path="reconciliation" element={<Reconciliation />} />
+            <Route path="reports" element={<Reports />} />
+            <Route path="unauthorized" element={<Unauthorized />} />
           </Route>
-        </Routes>
-      </BrowserRouter>
+        </Route>
+      </Routes>
     </AuthProvider>
   );
 }

@@ -1,28 +1,86 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [stats, setStats] = useState({
+    totalCustomers: 0,
+    activeLoans: 0,
+    activeDeposits: 0,
+    totalDoorstepCollections: 0,
+    totalOutstandingLoan: 0
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchStats();
+  }, []);
+
+  const fetchStats = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch('http://localhost:5000/api/dashboard/stats');
+      const data = await res.json();
+      if (res.ok) setStats(data);
+    } catch (err) {
+      console.error('Error fetching stats:', err);
+    } finally {
+      setLoading(false);
+      setIsRefreshing(false);
+    }
+  };
+
+  const handleRefresh = () => {
+    setIsRefreshing(true);
+    fetchStats();
+  };
 
   const topMetrics = [
-    { title: 'Total Customers', value: '12,543', progress: 75, limit: '11,156', change: '+12.5%', color: 'bg-[#0284c7]', route: '/customers' },
-    { title: 'Total Products / RD', value: '3,842', progress: 62, limit: '3,551', change: '+8.2%', color: 'bg-emerald-500', route: '/rd' },
-    { title: 'Today Collections', value: '9,238', progress: 85, limit: '8,012', change: '+15.3%', color: 'bg-amber-500', route: '/deposits' },
-    { title: 'Total Revenue', value: '₹ 2.4M', progress: 90, limit: '₹ 1.95M', change: '+23.1%', color: 'bg-purple-500', route: '/reports' },
+    { 
+      title: 'Total Customers', 
+      value: loading ? '...' : stats.totalCustomers.toLocaleString('en-IN'), 
+      progress: 75, 
+      limit: 'Active Accounts', 
+      change: 'Live', 
+      color: 'bg-[#0284c7]', 
+      route: '/customers' 
+    },
+    { 
+      title: 'Total Products / RD & FD', 
+      value: loading ? '...' : stats.activeDeposits.toLocaleString('en-IN'), 
+      progress: 62, 
+      limit: 'Active Schemes', 
+      change: 'Live', 
+      color: 'bg-emerald-500', 
+      route: '/deposits' 
+    },
+    { 
+      title: 'Total Member Balance', 
+      value: loading ? '...' : `₹ ${stats.totalDoorstepCollections.toLocaleString('en-IN')}`, 
+      progress: 85, 
+      limit: 'Savings & Doorstep', 
+      change: 'Live', 
+      color: 'bg-amber-500', 
+      route: '/deposits' 
+    },
+    { 
+      title: 'Active Loans Outstanding', 
+      value: loading ? '...' : `₹ ${stats.totalOutstandingLoan.toLocaleString('en-IN')}`, 
+      progress: 90, 
+      limit: `${stats.activeLoans} Active Loans`, 
+      change: 'Live', 
+      color: 'bg-purple-500', 
+      route: '/loans' 
+    },
   ];
 
   const quickActions = [
     { label: 'Add Customer', sub: 'Create new profile', bg: 'bg-[#0284c7]', route: '/customers' },
     { label: 'Approve Loans', sub: 'Review pending', bg: 'bg-[#10b981]', route: '/loans' },
-    { label: 'View Reports', sub: 'Analyze data', bg: 'bg-[#f97316]', route: '/reports' },
+    { label: 'Doorstep Collection', sub: 'Log agent entry', bg: 'bg-[#f97316]', route: '/deposits' },
     { label: 'Settings', sub: 'Configure system', bg: 'bg-[#a855f7]', route: '/reconciliation' },
   ];
-
-  const handleRefresh = () => {
-    setIsRefreshing(true);
-    setTimeout(() => setIsRefreshing(false), 800);
-  };
 
   return (
     <div className="space-y-4 sm:space-y-6 max-w-7xl mx-auto">
@@ -33,7 +91,7 @@ export default function Dashboard() {
           <div className="flex flex-wrap items-center gap-2 sm:gap-3">
             <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Welcome back, Admin</h1>
             <span className="bg-white/15 backdrop-blur-sm text-sky-100 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full text-[11px] sm:text-xs font-medium border border-white/10">
-              Wednesday, September 2, 2026
+              {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
             </span>
           </div>
 
@@ -56,33 +114,33 @@ export default function Dashboard() {
         </div>
 
         <p className="text-xs text-sky-100 font-normal">
-          Here's your platform performance overview
+          Here's your live platform performance overview
         </p>
 
         {/* Mini Glass Stats */}
         <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3 pt-1">
           <div className="bg-[#014f7c]/50 backdrop-blur-md border border-white/10 p-3 sm:p-3.5 rounded-xl hover:bg-[#014f7c]/70 transition-all cursor-pointer" onClick={() => navigate('/deposits')}>
-            <span className="text-[11px] text-sky-200 font-medium block">Today's Collections</span>
-            <span className="text-lg sm:text-xl font-extrabold block my-0.5">47</span>
-            <span className="text-[10px] text-emerald-300 font-semibold">+12% from yesterday</span>
+            <span className="text-[11px] text-sky-200 font-medium block">Total Member Balance</span>
+            <span className="text-lg sm:text-xl font-extrabold block my-0.5">₹ {loading ? '...' : stats.totalDoorstepCollections.toLocaleString('en-IN')}</span>
+            <span className="text-[10px] text-emerald-300 font-semibold">MongoDB Synchronized</span>
           </div>
 
           <div className="bg-[#014f7c]/50 backdrop-blur-md border border-white/10 p-3 sm:p-3.5 rounded-xl hover:bg-[#014f7c]/70 transition-all cursor-pointer" onClick={() => navigate('/customers')}>
-            <span className="text-[11px] text-sky-200 font-medium block">New Customers</span>
-            <span className="text-lg sm:text-xl font-extrabold block my-0.5">23</span>
-            <span className="text-[10px] text-emerald-300 font-semibold">+8% from yesterday</span>
+            <span className="text-[11px] text-sky-200 font-medium block">Total Members</span>
+            <span className="text-lg sm:text-xl font-extrabold block my-0.5">{loading ? '...' : stats.totalCustomers}</span>
+            <span className="text-[10px] text-emerald-300 font-semibold">Active Accounts</span>
           </div>
 
-          <div className="bg-[#014f7c]/50 backdrop-blur-md border border-white/10 p-3 sm:p-3.5 rounded-xl hover:bg-[#014f7c]/70 transition-all cursor-pointer" onClick={() => navigate('/reports')}>
-            <span className="text-[11px] text-sky-200 font-medium block">Revenue Today</span>
-            <span className="text-lg sm:text-xl font-extrabold block my-0.5">₹ 84K</span>
-            <span className="text-[10px] text-emerald-300 font-semibold">+16% from yesterday</span>
+          <div className="bg-[#014f7c]/50 backdrop-blur-md border border-white/10 p-3 sm:p-3.5 rounded-xl hover:bg-[#014f7c]/70 transition-all cursor-pointer" onClick={() => navigate('/loans')}>
+            <span className="text-[11px] text-sky-200 font-medium block">Active Loans</span>
+            <span className="text-lg sm:text-xl font-extrabold block my-0.5">{loading ? '...' : stats.activeLoans}</span>
+            <span className="text-[10px] text-emerald-300 font-semibold">Outstanding Portfolio</span>
           </div>
 
-          <div className="bg-[#014f7c]/50 backdrop-blur-md border border-white/10 p-3 sm:p-3.5 rounded-xl hover:bg-[#014f7c]/70 transition-all cursor-pointer" onClick={() => navigate('/reconciliation')}>
-            <span className="text-[11px] text-sky-200 font-medium block">Collection Rate</span>
-            <span className="text-lg sm:text-xl font-extrabold block my-0.5">93.2%</span>
-            <span className="text-[10px] text-emerald-300 font-semibold">+0.4% target met</span>
+          <div className="bg-[#014f7c]/50 backdrop-blur-md border border-white/10 p-3 sm:p-3.5 rounded-xl hover:bg-[#014f7c]/70 transition-all cursor-pointer" onClick={() => navigate('/deposits')}>
+            <span className="text-[11px] text-sky-200 font-medium block">FD / RD Schemes</span>
+            <span className="text-lg sm:text-xl font-extrabold block my-0.5">{loading ? '...' : stats.activeDeposits}</span>
+            <span className="text-[10px] text-emerald-300 font-semibold">Active Investments</span>
           </div>
         </div>
       </div>
@@ -109,7 +167,7 @@ export default function Dashboard() {
                 <div className={`${card.color} h-full rounded-full`} style={{ width: `${card.progress}%` }}></div>
               </div>
               <div className="flex justify-between text-[10px] text-slate-400 font-medium">
-                <span>vs last month</span>
+                <span>Database Sync</span>
                 <span>{card.limit}</span>
               </div>
             </div>
