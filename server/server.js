@@ -26,6 +26,7 @@ app.use('/api/rds', require('./routes/rdRoutes'));
 app.use('/api/fds', require('./routes/fdRoutes'));
 app.use('/api/reports', require('./routes/reportRoutes'));
 app.use('/api/stats', statsRoutes);
+app.use('/api/dashboard', require('./routes/dashboardRoutes'));
 
 // Base Route Test
 app.get('/', (req, res) => {
