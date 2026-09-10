@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import apiClient from '../services/apiService';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -15,17 +16,23 @@ export default function Dashboard() {
 
   useEffect(() => {
     fetchStats();
+
+    // 10 seconds auto-refresh for live data sync
+    const interval = setInterval(fetchStats, 10000);
+    return () => clearInterval(interval);
   }, []);
 
   const fetchStats = async () => {
     try {
       setLoading(true);
-      const res = await fetch('http://localhost:5000/api/dashboard/stats');
-      const data = await res.json();
-      if (res.ok) setStats(data);
+      // Fixed: Centralized apiClient using environment URL
+      const res = await apiClient.get('/dashboard/stats');
+      if (res.data) {
+        setStats(res.data.data || res.data);
+      }
     } catch (err) {
       console.error('Error fetching stats:', err);
-    } finally {
+    } fontinally {
       setLoading(false);
       setIsRefreshing(false);
     }
@@ -39,7 +46,7 @@ export default function Dashboard() {
   const topMetrics = [
     { 
       title: 'Total Customers', 
-      value: loading ? '...' : stats.totalCustomers.toLocaleString('en-IN'), 
+      value: loading ? '...' : (stats.totalCustomers || 0).toLocaleString('en-IN'), 
       progress: 75, 
       limit: 'Active Accounts', 
       change: 'Live', 
@@ -48,7 +55,7 @@ export default function Dashboard() {
     },
     { 
       title: 'Total Products / RD & FD', 
-      value: loading ? '...' : stats.activeDeposits.toLocaleString('en-IN'), 
+      value: loading ? '...' : (stats.activeDeposits || 0).toLocaleString('en-IN'), 
       progress: 62, 
       limit: 'Active Schemes', 
       change: 'Live', 
@@ -57,7 +64,7 @@ export default function Dashboard() {
     },
     { 
       title: 'Total Member Balance', 
-      value: loading ? '...' : `₹ ${stats.totalDoorstepCollections.toLocaleString('en-IN')}`, 
+      value: loading ? '...' : `₹ ${(stats.totalDoorstepCollections || 0).toLocaleString('en-IN')}`, 
       progress: 85, 
       limit: 'Savings & Doorstep', 
       change: 'Live', 
@@ -66,9 +73,9 @@ export default function Dashboard() {
     },
     { 
       title: 'Active Loans Outstanding', 
-      value: loading ? '...' : `₹ ${stats.totalOutstandingLoan.toLocaleString('en-IN')}`, 
+      value: loading ? '...' : `₹ ${(stats.totalOutstandingLoan || 0).toLocaleString('en-IN')}`, 
       progress: 90, 
-      limit: `${stats.activeLoans} Active Loans`, 
+      limit: `${stats.activeLoans || 0} Active Loans`, 
       change: 'Live', 
       color: 'bg-purple-500', 
       route: '/loans' 
@@ -121,25 +128,25 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3 pt-1">
           <div className="bg-[#014f7c]/50 backdrop-blur-md border border-white/10 p-3 sm:p-3.5 rounded-xl hover:bg-[#014f7c]/70 transition-all cursor-pointer" onClick={() => navigate('/deposits')}>
             <span className="text-[11px] text-sky-200 font-medium block">Total Member Balance</span>
-            <span className="text-lg sm:text-xl font-extrabold block my-0.5">₹ {loading ? '...' : stats.totalDoorstepCollections.toLocaleString('en-IN')}</span>
+            <span className="text-lg sm:text-xl font-extrabold block my-0.5">₹ {loading ? '...' : (stats.totalDoorstepCollections || 0).toLocaleString('en-IN')}</span>
             <span className="text-[10px] text-emerald-300 font-semibold">MongoDB Synchronized</span>
           </div>
 
           <div className="bg-[#014f7c]/50 backdrop-blur-md border border-white/10 p-3 sm:p-3.5 rounded-xl hover:bg-[#014f7c]/70 transition-all cursor-pointer" onClick={() => navigate('/customers')}>
             <span className="text-[11px] text-sky-200 font-medium block">Total Members</span>
-            <span className="text-lg sm:text-xl font-extrabold block my-0.5">{loading ? '...' : stats.totalCustomers}</span>
+            <span className="text-lg sm:text-xl font-extrabold block my-0.5">{loading ? '...' : (stats.totalCustomers || 0)}</span>
             <span className="text-[10px] text-emerald-300 font-semibold">Active Accounts</span>
           </div>
 
           <div className="bg-[#014f7c]/50 backdrop-blur-md border border-white/10 p-3 sm:p-3.5 rounded-xl hover:bg-[#014f7c]/70 transition-all cursor-pointer" onClick={() => navigate('/loans')}>
             <span className="text-[11px] text-sky-200 font-medium block">Active Loans</span>
-            <span className="text-lg sm:text-xl font-extrabold block my-0.5">{loading ? '...' : stats.activeLoans}</span>
+            <span className="text-lg sm:text-xl font-extrabold block my-0.5">{loading ? '...' : (stats.activeLoans || 0)}</span>
             <span className="text-[10px] text-emerald-300 font-semibold">Outstanding Portfolio</span>
           </div>
 
           <div className="bg-[#014f7c]/50 backdrop-blur-md border border-white/10 p-3 sm:p-3.5 rounded-xl hover:bg-[#014f7c]/70 transition-all cursor-pointer" onClick={() => navigate('/deposits')}>
             <span className="text-[11px] text-sky-200 font-medium block">FD / RD Schemes</span>
-            <span className="text-lg sm:text-xl font-extrabold block my-0.5">{loading ? '...' : stats.activeDeposits}</span>
+            <span className="text-lg sm:text-xl font-extrabold block my-0.5">{loading ? '...' : (stats.activeDeposits || 0)}</span>
             <span className="text-[10px] text-emerald-300 font-semibold">Active Investments</span>
           </div>
         </div>
