@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
 const connectDB = require('./config/db');
+const statsRoutes = require('./routes/statsRoutes');
 
 const app = express();
 
@@ -24,6 +25,7 @@ app.use('/api/reconciliation', require('./routes/reconciliationRoutes'));
 app.use('/api/rds', require('./routes/rdRoutes'));
 app.use('/api/fds', require('./routes/fdRoutes'));
 app.use('/api/reports', require('./routes/reportRoutes'));
+app.use('/api/stats', statsRoutes);
 
 // Base Route Test
 app.get('/', (req, res) => {
