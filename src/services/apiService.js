@@ -1,6 +1,9 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'https://api.coopfinance.com/v1'; // Client server endpoint
+// Vercel Environment Variable detect karega, otherwise deployed backend URL ko fallback banayega
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL 
+  ? `${import.meta.env.VITE_API_BASE_URL}/api`
+  : 'https://coop-finance-backend.vercel.app/api';
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -11,7 +14,8 @@ const apiClient = axios.create({
 
 // Request Interceptor: Auth token inject karne ke liye
 apiClient.interceptors.request.use((config) => {
-  const token = localStorage.getItem('coop_token');
+  // Check both common token keys for safety
+  const token = localStorage.getItem('coop_token') || localStorage.getItem('token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
