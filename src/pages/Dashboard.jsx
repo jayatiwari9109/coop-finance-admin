@@ -25,14 +25,13 @@ export default function Dashboard() {
   const fetchStats = async () => {
     try {
       setLoading(true);
-      // Fixed: Centralized apiClient using environment URL
       const res = await apiClient.get('/dashboard/stats');
       if (res.data) {
         setStats(res.data.data || res.data);
       }
     } catch (err) {
       console.error('Error fetching stats:', err);
-    } fontinally {
+    } finally { // <-- Corrected here
       setLoading(false);
       setIsRefreshing(false);
     }
