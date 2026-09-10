@@ -16,8 +16,10 @@ export default function Login() {
     setError('');
 
     try {
-      // Relative Path `/api/auth/login` use kiya gaya hai (Vite Proxy compatible)
-      const res = await fetch('/api/auth/login', {
+      // Production Backend URL fallback ke sath attach kiya gaya hai
+      const API_BASE = import.meta.env.VITE_API_BASE_URL || '';
+      
+      const res = await fetch(`${API_BASE}/api/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
